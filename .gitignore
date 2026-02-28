@@ -127,3 +127,67 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# ==========================================
+# Flutter / Dart
+# ==========================================
+# Miscellaneous
+*.class
+*.lock
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+frontend/.dart_tool/
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/ios/Pods/
+frontend/ios/.symlinks/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/app/debug/
+frontend/android/app/profile/
+frontend/android/app/release/
+frontend/**/*.g.dart
+frontend/**/*.freezed.dart
+
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# ==========================================
+# Backend specific
+# ==========================================
+backend/.env
+backend/uploads/
