@@ -48,8 +48,8 @@ dependencies:
   percent_indicator: ^4.2.3
 
   # 그림일기
-  flutter_drawing_board: ^0.4.7
-  record: ^5.1.2
+  flutter_drawing_board: ^1.0.1
+  record: ^6.2.0
   audioplayers: ^6.1.0
 
   # 유틸리티
