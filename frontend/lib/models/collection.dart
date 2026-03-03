@@ -75,6 +75,7 @@ class CollectionItem extends Equatable {
     this.locationName,
     this.discoveredAt,
     this.notes,
+    this.weather,
   });
 
   final String id;
@@ -87,6 +88,7 @@ class CollectionItem extends Equatable {
   final String? locationName;
   final DateTime? discoveredAt;
   final String? notes;
+  final String? weather;
 
   factory CollectionItem.fromJson(Map<String, dynamic> json) {
     return CollectionItem(
@@ -102,6 +104,7 @@ class CollectionItem extends Equatable {
           ? DateTime.tryParse(json['discovered_at'] as String)
           : null,
       notes: json['notes'] as String?,
+      weather: json['weather'] as String?,
     );
   }
 
@@ -116,6 +119,7 @@ class CollectionItem extends Equatable {
     'location_name': locationName,
     'discovered_at': discoveredAt?.toIso8601String(),
     'notes': notes,
+    'weather': weather,
   };
 
   CollectionItem copyWith({
@@ -129,6 +133,7 @@ class CollectionItem extends Equatable {
     String? locationName,
     DateTime? discoveredAt,
     String? notes,
+    String? weather,
   }) {
     return CollectionItem(
       id: id ?? this.id,
@@ -141,6 +146,7 @@ class CollectionItem extends Equatable {
       locationName: locationName ?? this.locationName,
       discoveredAt: discoveredAt ?? this.discoveredAt,
       notes: notes ?? this.notes,
+      weather: weather ?? this.weather,
     );
   }
 
@@ -156,5 +162,6 @@ class CollectionItem extends Equatable {
     locationName,
     discoveredAt,
     notes,
+    weather,
   ];
 }

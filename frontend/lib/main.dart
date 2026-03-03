@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'blocs/auth/auth_bloc.dart';
 import 'blocs/collection/collection_bloc.dart';
 import 'config/constants.dart';
+import 'config/theme.dart';
 import 'router/app_router.dart';
 import 'services/api/dio_client.dart';
 
@@ -63,12 +64,7 @@ class _NatureAppState extends State<NatureApp> {
       child: MaterialApp.router(
         title: AppConstants.appName,
         debugShowCheckedModeBanner: AppConstants.devMode,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF4CAF50),
-          ),
-          useMaterial3: true,
-        ),
+        theme: NatureTheme.lightTheme,
         routerConfig: _appRouter.router,
       ),
     );

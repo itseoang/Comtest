@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/collection/collection_bloc.dart';
 import '../../models/collection.dart';
 
@@ -22,90 +21,90 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, authState) {
-        final profile =
-            authState is Authenticated ? authState.profile : null;
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('자연도감'),
-            backgroundColor: const Color(0xFF4CAF50),
-            foregroundColor: Colors.white,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.logout),
-                onPressed: () {
-                  context.read<AuthBloc>().add(const LogoutRequested());
-                },
-              ),
-            ],
-          ),
-          backgroundColor: const Color(0xFFF5F5E8),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 인사말 헤더
-              if (profile != null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '안녕하세요, ${profile.nickname}님!',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: BlocBuilder<CollectionBloc, CollectionState>(
+          builder: (context, state) {
+            final count = state is CollectionLoaded ? state.items.length : 0;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('내 도감'),
+                if (count > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$count',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF2E7D32),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '반려동물: ${profile.petName} (${profile.petType}) Lv.${profile.petLevel}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: Text(
-                  '나의 컬렉션',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              // 컬렉션 그리드
-              Expanded(
-                child: BlocBuilder<CollectionBloc, CollectionState>(
-                  builder: (context, state) {
-                    if (state is CollectionLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (state is CollectionError) {
-                      return Center(
-                        child: Text(
-                          state.message,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      );
-                    }
-                    if (state is CollectionLoaded) {
-                      return _buildGrid(context, state.items);
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ],
+                ],
+              ],
+            );
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
           ),
-        );
-      },
+        ],
+      ),
+      body: BlocBuilder<CollectionBloc, CollectionState>(
+        builder: (context, state) {
+          if (state is CollectionLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is CollectionError) {
+            return Center(
+              child: Text(
+                state.message,
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+          if (state is CollectionLoaded) {
+            if (state.items.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text('🔍', style: TextStyle(fontSize: 48)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '아직 발견한 생물이 없어요',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF3E2723),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '첫 생물을 발견해보세요!',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: const Color(0xFF3E2723).withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return _buildGrid(context, state.items);
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 
@@ -150,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return GestureDetector(
-      onTap: () => context.push('/collection/${item.id}'),
+      onTap: () => context.push('/home/collection/${item.id}'),
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -192,14 +191,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                item.cardNumber,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.8),
-                ),
               ),
             ],
           ),

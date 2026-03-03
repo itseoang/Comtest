@@ -50,7 +50,6 @@ class _CollectionDetailView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5E8),
         appBar: AppBar(
           title: BlocBuilder<CollectionDetailBloc, CollectionDetailState>(
             builder: (context, state) {
@@ -60,8 +59,6 @@ class _CollectionDetailView extends StatelessWidget {
               return const Text('상세 정보');
             },
           ),
-          backgroundColor: const Color(0xFF4CAF50),
-          foregroundColor: Colors.white,
         ),
         body: BlocBuilder<CollectionDetailBloc, CollectionDetailState>(
           builder: (context, state) {
@@ -91,25 +88,23 @@ class _CollectionDetailView extends StatelessWidget {
           _buildCardHeader(item),
           const SizedBox(height: 24),
           // 능력치 섹션
-          const Text(
+          _buildSection(
             '능력치',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: StatsChart(stats: item.stats),
             ),
-            child: StatsChart(stats: item.stats),
           ),
           const SizedBox(height: 16),
           // 관찰일기 쓰기 버튼
@@ -159,9 +154,72 @@ class _CollectionDetailView extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 24),
-          // 발견 정보
-          if (item.locationName != null || item.discoveredAt != null)
-            _buildDiscoveryInfo(item),
+          // 발견 장소
+          if (item.locationName != null) ...[
+            _buildSection(
+              '발견 장소',
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF5D4037)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      item.locationName!,
+                      style: const TextStyle(fontSize: 14, color: Color(0xFF5D4037)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          // 발견 날짜
+          if (item.discoveredAt != null) ...[
+            _buildSection(
+              '발견 날짜',
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF5D4037)),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${item.discoveredAt!.year}년 ${item.discoveredAt!.month}월 ${item.discoveredAt!.day}일 ${item.discoveredAt!.hour.toString().padLeft(2, '0')}:${item.discoveredAt!.minute.toString().padLeft(2, '0')}',
+                    style: const TextStyle(fontSize: 14, color: Color(0xFF5D4037)),
+                  ),
+                  if (item.weather != null && item.weather!.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Text(
+                      item.weather!,
+                      style: const TextStyle(fontSize: 14, color: Color(0xFF8D6E63)),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+          // 메모
+          _buildSection(
+            '메모',
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F0),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD7CCC8)),
+              ),
+              child: Text(
+                item.notes?.isNotEmpty == true ? item.notes! : '메모가 없습니다',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: item.notes?.isNotEmpty == true
+                      ? const Color(0xFF3E2723)
+                      : const Color(0xFF8D6E63),
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -226,15 +284,6 @@ class _CollectionDetailView extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.cardNumber,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.white.withOpacity(0.8),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
                   item.speciesName,
                   style: const TextStyle(
                     fontSize: 26,
@@ -282,50 +331,21 @@ class _CollectionDetailView extends StatelessWidget {
     }
   }
 
-  Widget _buildDiscoveryInfo(CollectionItem item) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '발견 정보',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  Widget _buildSection(String title, Widget content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF3E2723),
           ),
-          const SizedBox(height: 12),
-          if (item.locationName != null)
-            Row(
-              children: [
-                const Icon(Icons.location_on, size: 18, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(item.locationName!, style: const TextStyle(fontSize: 14)),
-              ],
-            ),
-          if (item.discoveredAt != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 18,
-                  color: Colors.grey,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${item.discoveredAt!.year}.'
-                  '${item.discoveredAt!.month.toString().padLeft(2, '0')}.'
-                  '${item.discoveredAt!.day.toString().padLeft(2, '0')}',
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        content,
+      ],
     );
   }
 

@@ -95,7 +95,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         rarityScore: 55,
       ),
       locationName: '북한산',
-      discoveredAt: DateTime(2026, 2, 15),
+      discoveredAt: DateTime(2026, 2, 15, 14, 30),
+      weather: '☀️ 맑음',
     ),
     CollectionItem(
       id: 'col-002',
@@ -111,7 +112,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         rarityScore: 62,
       ),
       locationName: '광릉수목원',
-      discoveredAt: DateTime(2026, 2, 20),
+      discoveredAt: DateTime(2026, 2, 20, 10, 15),
+      weather: '⛅ 구름 조금',
     ),
     CollectionItem(
       id: 'col-003',
@@ -127,7 +129,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         rarityScore: 48,
       ),
       locationName: '올림픽공원',
-      discoveredAt: DateTime(2026, 2, 22),
+      discoveredAt: DateTime(2026, 2, 22, 11, 45),
+      weather: '☀️ 맑음',
     ),
     CollectionItem(
       id: 'col-004',
@@ -143,7 +146,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         rarityScore: 58,
       ),
       locationName: '남산공원',
-      discoveredAt: DateTime(2026, 2, 25),
+      discoveredAt: DateTime(2026, 2, 25, 15, 20),
+      weather: '🌤️ 대체로 맑음',
     ),
     CollectionItem(
       id: 'col-005',
@@ -159,7 +163,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         rarityScore: 42,
       ),
       locationName: '청계산',
-      discoveredAt: DateTime(2026, 2, 28),
+      discoveredAt: DateTime(2026, 2, 28, 9, 0),
+      weather: '🌧️ 비',
     ),
     CollectionItem(
       id: 'col-006',
@@ -175,7 +180,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
         rarityScore: 65,
       ),
       locationName: '덕수궁',
-      discoveredAt: DateTime(2026, 3, 1),
+      discoveredAt: DateTime(2026, 3, 1, 16, 10),
+      weather: '☁️ 흐림',
     ),
   ];
 
