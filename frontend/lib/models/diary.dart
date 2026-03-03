@@ -4,6 +4,7 @@ class DiaryEntry extends Equatable {
   const DiaryEntry({
     required this.id,
     required this.speciesName,
+    required this.speciesCategory,
     required this.title,
     required this.content,
     required this.mood,
@@ -12,11 +13,12 @@ class DiaryEntry extends Equatable {
 
   final String id;
   final String speciesName;
+  final String speciesCategory;
   final String title;
   final String content;
   final String mood;
   final DateTime createdAt;
 
   @override
-  List<Object?> get props => [id, speciesName, title, content, mood, createdAt];
+  List<Object?> get props => [id, speciesName, speciesCategory, title, content, mood, createdAt];
 }

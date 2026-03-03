@@ -7,6 +7,8 @@ import '../screens/home/home_screen.dart';
 import '../screens/home/collection_detail_screen.dart';
 import '../screens/identify/identify_screen.dart';
 import '../screens/diary/diary_screen.dart';
+import '../screens/diary/diary_detail_screen.dart';
+import '../models/diary.dart';
 import '../screens/friends/friends_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../widgets/common/nature_bottom_nav.dart';
@@ -84,6 +86,17 @@ class AppRouter {
                 path: '/diary',
                 name: 'diary',
                 builder: (context, state) => const DiaryScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'detail',
+                    name: 'diaryDetail',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final entry = state.extra as DiaryEntry;
+                      return DiaryDetailScreen(entry: entry);
+                    },
+                  ),
+                ],
               ),
             ],
           ),
