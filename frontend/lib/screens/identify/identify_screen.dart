@@ -1,8 +1,103 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../blocs/identify/identify_bloc.dart';
 import '../../config/theme.dart';
+import 'identify_result_screen.dart';
 
-class IdentifyScreen extends StatelessWidget {
+class IdentifyScreen extends StatefulWidget {
   const IdentifyScreen({super.key});
+
+  @override
+  State<IdentifyScreen> createState() => _IdentifyScreenState();
+}
+
+class _IdentifyScreenState extends State<IdentifyScreen> {
+  final _picker = ImagePicker();
+  final _identifyBloc = IdentifyBloc();
+
+  @override
+  void dispose() {
+    _identifyBloc.close();
+    super.dispose();
+  }
+
+  Future<void> _pickAndIdentify(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (picked == null) return;
+
+      final file = File(picked.path);
+      _identifyBloc.add(IdentifyImage(imageFile: file));
+
+      if (!mounted) return;
+
+      // Show loading dialog
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => BlocProvider.value(
+          value: _identifyBloc,
+          child: BlocListener<IdentifyBloc, IdentifyState>(
+            listener: (ctx, state) {
+              if (state is IdentifySuccess) {
+                Navigator.of(ctx).pop(); // close dialog
+                Navigator.of(ctx).push(
+                  MaterialPageRoute(
+                    builder: (_) => IdentifyResultScreen(
+                      imageFile: state.imageFile,
+                      results: state.results,
+                    ),
+                  ),
+                );
+                _identifyBloc.add(const ResetIdentify());
+              } else if (state is IdentifyError) {
+                Navigator.of(ctx).pop(); // close dialog
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('식별 실패: ${state.message}')),
+                );
+                _identifyBloc.add(const ResetIdentify());
+              }
+            },
+            child: const AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(color: NatureTheme.primaryGreen),
+                  SizedBox(height: 20),
+                  Text(
+                    'AI가 분석 중이에요...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF3E2723),
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '잠시만 기다려주세요',
+                    style: TextStyle(fontSize: 13, color: Color(0xFF8D6E63)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,11 +184,7 @@ class IdentifyScreen extends StatelessWidget {
 
   Widget _buildCameraCard(BuildContext context) {
     return _ActionCard(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('카메라 기능 준비 중입니다')),
-        );
-      },
+      onTap: () => _pickAndIdentify(ImageSource.camera),
       gradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -110,11 +201,7 @@ class IdentifyScreen extends StatelessWidget {
 
   Widget _buildGalleryCard(BuildContext context) {
     return _ActionCard(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('갤러리 기능 준비 중입니다')),
-        );
-      },
+      onTap: () => _pickAndIdentify(ImageSource.gallery),
       gradient: const LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
