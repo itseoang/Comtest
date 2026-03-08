@@ -13,12 +13,12 @@ dependencies:
     sdk: flutter
 
   # 상태관리 (BLoC)
-  flutter_bloc: ^8.1.6
-  bloc: ^8.1.4
+  flutter_bloc: ^9.1.1
+  bloc: ^9.2.0
   equatable: ^2.0.5
 
   # 네비게이션
-  go_router: ^14.2.0
+  go_router: ^17.1.0
 
   # 네트워크
   dio: ^5.7.0
@@ -32,13 +32,14 @@ dependencies:
   path: ^1.9.0
 
   # 카메라 & 미디어
-  camera: ^0.11.0+2
+  camera: ^0.12.0
   image_picker: ^1.1.2
   image: ^4.2.0
+  native_exif: ^0.7.0
 
   # 위치
-  geolocator: ^12.0.0
-  geocoding: ^3.0.0
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
 
   # UI
   cached_network_image: ^3.4.1
@@ -54,9 +55,20 @@ dependencies:
 
   # 유틸리티
   uuid: ^4.5.0
-  intl: ^0.19.0
+  intl: ^0.20.2
   json_annotation: ^4.9.0
-  freezed_annotation: ^2.4.4
+  freezed_annotation: ^3.1.0
+
+  # 지도
+  url_launcher: ^6.2.5
+  flutter_naver_map: ^1.3.0
+
+  # 환경변수
+  flutter_dotenv: ^6.0.0
+
+  # QR 코드
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^7.2.0
 
   # 아이콘
   cupertino_icons: ^1.0.8
@@ -64,16 +76,17 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
   build_runner: ^2.4.12
-  freezed: ^2.5.7
+  freezed: ^3.2.5
   json_serializable: ^6.8.0
-  bloc_test: ^9.1.7
+  bloc_test: ^10.0.0
   mocktail: ^1.0.4
 
 flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/images/
     - assets/fonts/

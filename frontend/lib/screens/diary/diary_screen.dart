@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../blocs/diary/diary_bloc.dart';
 import '../../models/diary.dart';
+import '../../services/map_launcher.dart';
 
 class DiaryScreen extends StatelessWidget {
   const DiaryScreen({super.key});
@@ -279,65 +283,229 @@ class _DiaryViewState extends State<_DiaryView> {
     );
   }
 
+  static const _categoryColors = {
+    'plant': Color(0xFF388E3C),
+    'bird': Color(0xFF1565C0),
+    'insect': Color(0xFFE65100),
+    'mammal': Color(0xFF5D4037),
+    'amphibian': Color(0xFF00695C),
+  };
+
+  static const _categoryIcons = {
+    'plant': Icons.eco,
+    'bird': Icons.air,
+    'insect': Icons.bug_report,
+    'mammal': Icons.pets,
+    'amphibian': Icons.water,
+  };
+
+  Future<void> _openMap(BuildContext context, DiaryEntry entry) async {
+    await MapLauncher.openNaverMap(
+      placeName: entry.location!,
+      latitude: entry.latitude,
+      longitude: entry.longitude,
+    );
+  }
+
+  Future<void> _pickImage(BuildContext context, DiaryEntry entry) async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null && context.mounted) {
+      context.read<DiaryBloc>().add(
+            AddDiaryImage(diaryId: entry.id, imagePath: picked.path),
+          );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이미지가 추가되었습니다'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
   Widget _buildDiaryCard(BuildContext context, DiaryEntry entry) {
     final emoji = _moodEmojis[entry.mood] ?? '😊';
+    final categoryColor =
+        _categoryColors[entry.speciesCategory] ?? const Color(0xFF388E3C);
+    final categoryIcon =
+        _categoryIcons[entry.speciesCategory] ?? Icons.eco;
+
     return GestureDetector(
       onTap: () => context.push('/diary/detail', extra: entry),
       child: Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(emoji, style: const TextStyle(fontSize: 24)),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        entry.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF3E2723),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 상단 Row: 무드이모지 + 제목/날짜 | 이미지 버튼
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF3E2723),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${entry.createdAt.year}.${entry.createdAt.month.toString().padLeft(2, '0')}.${entry.createdAt.day.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF8D6E63),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // 우측 상단 이미지 영역
+                  GestureDetector(
+                    onTap: () => _pickImage(context, entry),
+                    child: entry.imagePath != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(entry.imagePath!),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF5F5F0),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: const Color(0xFFD7CCC8),
+                                width: 1,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_outlined,
+                              size: 22,
+                              color: Color(0xFFBCAAA4),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // 중간: 내용
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAFAF5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  entry.content,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF3E2723),
+                    height: 1.6,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // 장소 정보 (위치 탭 가능)
+              if (entry.location != null) ...[
+                GestureDetector(
+                  onTap: () => _openMap(context, entry),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.location_on, size: 14, color: Color(0xFF8D6E63)),
+                      const SizedBox(width: 4),
                       Text(
-                        '${entry.createdAt.year}.${entry.createdAt.month.toString().padLeft(2, '0')}.${entry.createdAt.day.toString().padLeft(2, '0')}',
+                        entry.location!,
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: Color(0xFF8D6E63),
                         ),
                       ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.open_in_new, size: 11, color: Color(0xFFBCAAA4)),
                     ],
                   ),
                 ),
+                const SizedBox(height: 8),
               ],
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFAFAF5),
-                borderRadius: BorderRadius.circular(10),
+              // 하단: 종 이름 라벨 + 보호자 댓글 인디케이터
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: categoryColor.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          categoryIcon,
+                          size: 13,
+                          color: categoryColor,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          entry.speciesName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: categoryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (entry.guardianComments.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFCE4EC),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.favorite, size: 12, color: Color(0xFFE91E63)),
+                          SizedBox(width: 3),
+                          Text(
+                            '보호자 💬',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFFE91E63),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
-              child: Text(
-                entry.content,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Color(0xFF3E2723),
-                  height: 1.6,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

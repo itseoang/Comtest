@@ -1,8 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../blocs/collection/collection_bloc.dart';
 import '../../blocs/collection/collection_detail_bloc.dart';
+import '../../blocs/quiz/quiz_bloc.dart';
 import '../../models/collection.dart';
+import '../../services/image_validator.dart';
+import '../../services/map_launcher.dart';
+import '../../data/species_encyclopedia.dart';
+import '../../widgets/collection/lifecycle_timeline.dart';
 import '../../widgets/collection/stats_chart.dart';
 import '../../widgets/diary/diary_write_sheet.dart';
 import '../../widgets/diary/stats_boost_result_dialog.dart';
@@ -23,8 +30,48 @@ class CollectionDetailScreen extends StatelessWidget {
   }
 }
 
-class _CollectionDetailView extends StatelessWidget {
+class _CollectionDetailView extends StatefulWidget {
   const _CollectionDetailView();
+
+  @override
+  State<_CollectionDetailView> createState() => _CollectionDetailViewState();
+}
+
+class _CollectionDetailViewState extends State<_CollectionDetailView> {
+  String? _photoPath;
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      final file = File(picked.path);
+
+      // EXIF 검증
+      final result = await ImageValidator.validate(file);
+      if (!result.isLikelyDirectPhoto && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('직접 촬영한 사진을 추천해요!'),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF8D6E63),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+
+      setState(() => _photoPath = picked.path);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +129,64 @@ class _CollectionDetailView extends StatelessWidget {
     );
   }
 
+  Widget _buildPhotoSection() {
+    return GestureDetector(
+      onTap: _pickPhoto,
+      child: _photoPath != null
+          ? Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.file(
+                    File(_photoPath!),
+                    width: double.infinity,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _photoPath = null),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(Icons.close, size: 18, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Container(
+              width: double.infinity,
+              height: 180,
+              decoration: BoxDecoration(
+                color: const Color(0xFFF5F5F0),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFFD7CCC8),
+                  width: 1.5,
+                ),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_a_photo_outlined, size: 40, color: Color(0xFFBCAAA4)),
+                  SizedBox(height: 8),
+                  Text(
+                    '사진 추가하기',
+                    style: TextStyle(fontSize: 14, color: Color(0xFF8D6E63)),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
   Widget _buildContent(BuildContext context, CollectionItem item) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -90,7 +195,10 @@ class _CollectionDetailView extends StatelessWidget {
         children: [
           // 카드 헤더
           _buildCardHeader(item),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          // 사진 영역
+          _buildPhotoSection(),
+          const SizedBox(height: 16),
           // 능력치 섹션
           _buildSection(
             '능력치',
@@ -162,17 +270,30 @@ class _CollectionDetailView extends StatelessWidget {
           if (item.locationName != null) ...[
             _buildSection(
               '발견 장소',
-              Row(
-                children: [
-                  const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF5D4037)),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      item.locationName!,
-                      style: const TextStyle(fontSize: 14, color: Color(0xFF5D4037)),
+              GestureDetector(
+                onTap: () => MapLauncher.openNaverMap(
+                  placeName: item.locationName!,
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 18, color: Color(0xFF5D4037)),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        item.locationName!,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF5D4037),
+                          decoration: TextDecoration.underline,
+                          decorationColor: Color(0xFFBCAAA4),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                    const Icon(Icons.open_in_new, size: 14, color: Color(0xFFBCAAA4)),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -201,6 +322,8 @@ class _CollectionDetailView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
           ],
+          // 생애 주기
+          _buildLifecycleSection(item.speciesName),
           // 메모
           _buildSection(
             '메모',
@@ -335,6 +458,21 @@ class _CollectionDetailView extends StatelessWidget {
     }
   }
 
+  Widget _buildLifecycleSection(String speciesName) {
+    final info = SpeciesEncyclopedia.getInfo(speciesName);
+    if (info == null || info.lifecycleStages.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        _buildSection(
+          '생애 주기',
+          LifecycleTimeline(stages: info.lifecycleStages),
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
   Widget _buildSection(String title, Widget content) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +492,7 @@ class _CollectionDetailView extends StatelessWidget {
   }
 
   void _showDiaryWriteSheet(BuildContext context, CollectionItem item) {
-    showModalBottomSheet<void>(
+    showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -364,6 +502,10 @@ class _CollectionDetailView extends StatelessWidget {
         value: context.read<CollectionDetailBloc>(),
         child: DiaryWriteSheet(item: item),
       ),
-    );
+    ).then((saved) {
+      if (saved == true && context.mounted) {
+        context.read<QuizBloc>().add(const CheckQuizTrigger(trigger: 'diary'));
+      }
+    });
   }
 }

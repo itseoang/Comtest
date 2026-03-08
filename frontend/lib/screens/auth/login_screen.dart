@@ -39,6 +39,10 @@ class _LoginScreenState extends State<LoginScreen> {
     context.read<AuthBloc>().add(const DevLogin());
   }
 
+  void _onDevGuardianLoginPressed() {
+    context.read<AuthBloc>().add(const DevGuardianLogin());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -250,6 +254,50 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 8),
                     Text(
                       '테스트 계정: test@nature.app  |  닉네임: 테스트탐험가',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey[500],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        final isLoading = state is AuthLoading;
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: OutlinedButton.icon(
+                            onPressed:
+                                isLoading ? null : _onDevGuardianLoginPressed,
+                            icon: const Icon(
+                              Icons.family_restroom,
+                              color: Color(0xFF1565C0),
+                            ),
+                            label: const Text(
+                              '보호자 모드로 시작',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1565C0),
+                              ),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color(0xFF1565C0),
+                                width: 2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '보호자 계정: guardian@nature.app  |  닉네임: 보호자',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[500],

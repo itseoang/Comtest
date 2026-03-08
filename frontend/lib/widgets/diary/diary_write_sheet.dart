@@ -73,7 +73,7 @@ class _DiaryWriteSheetState extends State<DiaryWriteSheet> {
         collectionId: widget.item.id,
       ),
     );
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
   }
 
   @override
@@ -104,10 +104,28 @@ class _DiaryWriteSheetState extends State<DiaryWriteSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            // 타이틀
-            Text(
-              '${widget.item.speciesName} 관찰일기',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // 타이틀 + 닫기 버튼
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${widget.item.speciesName} 관찰일기',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.close, size: 18, color: Color(0xFF5D4037)),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 4),
             Text(

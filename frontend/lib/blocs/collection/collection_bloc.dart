@@ -97,6 +97,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
       locationName: '북한산',
       discoveredAt: DateTime(2026, 2, 15, 14, 30),
       weather: '☀️ 맑음',
+      latitude: 37.6610,
+      longitude: 126.9880,
     ),
     CollectionItem(
       id: 'col-002',
@@ -114,6 +116,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
       locationName: '광릉수목원',
       discoveredAt: DateTime(2026, 2, 20, 10, 15),
       weather: '⛅ 구름 조금',
+      latitude: 37.7484,
+      longitude: 127.1654,
     ),
     CollectionItem(
       id: 'col-003',
@@ -131,6 +135,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
       locationName: '올림픽공원',
       discoveredAt: DateTime(2026, 2, 22, 11, 45),
       weather: '☀️ 맑음',
+      latitude: 37.5209,
+      longitude: 127.1237,
     ),
     CollectionItem(
       id: 'col-004',
@@ -148,6 +154,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
       locationName: '남산공원',
       discoveredAt: DateTime(2026, 2, 25, 15, 20),
       weather: '🌤️ 대체로 맑음',
+      latitude: 37.5512,
+      longitude: 126.9882,
     ),
     CollectionItem(
       id: 'col-005',
@@ -165,6 +173,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
       locationName: '청계산',
       discoveredAt: DateTime(2026, 2, 28, 9, 0),
       weather: '🌧️ 비',
+      latitude: 37.4370,
+      longitude: 127.0550,
     ),
     CollectionItem(
       id: 'col-006',
@@ -182,6 +192,8 @@ class CollectionBloc extends Bloc<CollectionEvent, CollectionState> {
       locationName: '덕수궁',
       discoveredAt: DateTime(2026, 3, 1, 16, 10),
       weather: '☁️ 흐림',
+      latitude: 37.5659,
+      longitude: 126.9750,
     ),
   ];
 

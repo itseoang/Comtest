@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../blocs/identify/identify_bloc.dart';
 import '../../config/theme.dart';
+import '../../services/image_validator.dart';
 import 'identify_result_screen.dart';
 
 class IdentifyScreen extends StatefulWidget {
@@ -34,6 +35,32 @@ class _IdentifyScreenState extends State<IdentifyScreen> {
       if (picked == null) return;
 
       final file = File(picked.path);
+
+      // 갤러리에서 선택한 경우 EXIF 검증
+      if (source == ImageSource.gallery && mounted) {
+        final result = await ImageValidator.validate(file);
+        if (!result.isLikelyDirectPhoto && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text('직접 촬영한 사진을 사용하면\n더 정확한 분석이 가능해요!'),
+                  ),
+                ],
+              ),
+              backgroundColor: const Color(0xFF8D6E63),
+              duration: const Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+      }
+
       _identifyBloc.add(IdentifyImage(imageFile: file));
 
       if (!mounted) return;

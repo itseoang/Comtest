@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../blocs/quiz/quiz_bloc.dart';
 import '../../data/species_encyclopedia.dart';
 import '../../services/species_classifier.dart';
 
@@ -80,6 +82,13 @@ class IdentifyResultScreen extends StatelessWidget {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('도감에 추가되었습니다!')),
                           );
+                          // 퀴즈 트리거 (종 이름 전달)
+                          context.read<QuizBloc>().add(
+                                CheckQuizTrigger(
+                                  trigger: 'identify',
+                                  species: topResult.speciesName,
+                                ),
+                              );
                           Navigator.of(context).pop();
                         },
                         icon: const Icon(Icons.add_circle_outline),
