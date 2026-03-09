@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../config/constants.dart';
 import '../../models/profile.dart';
 import '../../services/api/dio_client.dart';
 
@@ -97,6 +98,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     DevLogin event,
     Emitter<AuthState> emit,
   ) async {
+    if (!AppConstants.devMode) return;
     emit(const AuthLoading());
     // 짧은 지연으로 로딩 UI 확인 가능
     await Future<void>.delayed(const Duration(milliseconds: 300));
@@ -108,6 +110,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     DevGuardianLogin event,
     Emitter<AuthState> emit,
   ) async {
+    if (!AppConstants.devMode) return;
     emit(const AuthLoading());
     await Future<void>.delayed(const Duration(milliseconds: 300));
     emit(const Authenticated(profile: _devGuardianProfile));

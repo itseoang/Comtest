@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #FAFAF5;
+  --color-nature-brown: #3E2723;
+  --color-nature-green: #2E7D32;
+  --color-nature-green-light: #4CAF50;
+  --color-admin-red: #E53935;
+}
+
+:root {
+  --cream: #FAFAF5;
+  --nature-brown: #3E2723;
+  --nature-green: #2E7D32;
+}
+
+body {
+  background-color: var(--cream);
+  color: var(--nature-brown);
+}

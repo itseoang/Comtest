@@ -92,3 +92,4 @@ class UpdateProfileCustomization extends AuthEvent {
   @override
   List<Object?> get props => [statusMessage, avatarFrameIndex, profileBgColorIndex, titleBadge];
 }
+
