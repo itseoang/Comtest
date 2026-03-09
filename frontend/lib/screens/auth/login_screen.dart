@@ -65,7 +65,16 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 24),
+                  const Text(
+                    '만든사람 : 해원초 이서아',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF8D6E63),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   // 로고 영역
                   Container(
                     width: 100,

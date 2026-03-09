@@ -42,11 +42,11 @@ class AppConstants {
   // -------------------------
   // Quiz
   // -------------------------
-  static const double quizIdentifyProbability = 0.60;
-  static const double quizDashboardProbability = 0.30;
-  static const double quizDiaryProbability = 0.40;
-  static const int quizDashboardCooldownHours = 2;
-  static const int quizDashboardMaxPerDay = 3;
+  static const double quizIdentifyProbability = 0.30;
+  static const double quizDashboardProbability = 0.15;
+  static const double quizDiaryProbability = 0.20;
+  static const int quizDashboardCooldownHours = 4;
+  static const int quizDashboardMaxPerDay = 5;
   static const int quizCorrectPoints = 10;
   static const int quizWrongPoints = 2;
   static const int emotionCheckPoints = 5;

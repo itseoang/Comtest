@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../config/constants.dart';
 import '../models/quiz.dart';
 import '../data/quiz_bank.dart';
 
@@ -8,13 +9,40 @@ class QuizEngine {
   static final _random = Random();
 
   /// 퀴즈를 보여줄지 확률 판정
-  /// 첫 퀴즈 100%, 이후 모든 트리거 70% 확률 (쿨다운 및 일일 제한 없음)
+  /// 트리거별 확률 + 대시보드 쿨다운/일일 제한 적용
   static bool shouldShowQuiz(String trigger, QuizHistory history) {
     // 첫 퀴즈는 무조건 출제 (온보딩 효과)
     if (history.results.isEmpty) return true;
 
-    // 모든 트리거 70% 확률
-    return _random.nextDouble() < 0.70;
+    // 대시보드 트리거: 쿨다운 + 일일 제한 체크
+    if (trigger == 'dashboard') {
+      // 일일 최대 횟수 초과
+      if (history.todayDashboardQuizCount >= AppConstants.quizDashboardMaxPerDay) {
+        return false;
+      }
+      // 쿨다운 체크
+      if (history.lastDashboardQuizTime != null) {
+        final elapsed = DateTime.now().difference(history.lastDashboardQuizTime!);
+        if (elapsed.inHours < AppConstants.quizDashboardCooldownHours) {
+          return false;
+        }
+      }
+    }
+
+    // 트리거별 확률 적용
+    final double probability;
+    switch (trigger) {
+      case 'dashboard':
+        probability = AppConstants.quizDashboardProbability;
+      case 'identify':
+        probability = AppConstants.quizIdentifyProbability;
+      case 'diary':
+        probability = AppConstants.quizDiaryProbability;
+      default:
+        probability = 0.15;
+    }
+
+    return _random.nextDouble() < probability;
   }
 
   /// 문제 선택 (70% 학습 / 30% 감정, diary 트리거면 50%:50%)

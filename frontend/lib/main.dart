@@ -14,6 +14,7 @@ import 'config/constants.dart';
 import 'config/env_config.dart';
 import 'config/theme.dart';
 import 'router/app_router.dart';
+import 'services/ad_service.dart';
 import 'services/api/dio_client.dart';
 
 Future<void> main() async {
@@ -69,6 +70,9 @@ class _NatureAppState extends State<NatureApp> {
     // 앱 시작 시 인증 상태 확인
     _authBloc.add(const AuthCheckRequested());
     _challengeBloc.add(const LoadChallenge());
+
+    // 광고 SDK 초기화
+    AdService.instance.initialize();
   }
 
   @override

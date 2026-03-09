@@ -9,6 +9,7 @@ import '../../blocs/pet/pet_bloc.dart';
 import '../../config/constants.dart';
 import '../../models/challenge.dart';
 import '../../models/pet.dart';
+import '../../services/ad_service.dart';
 import '../../widgets/pet/pet_avatar.dart';
 
 // ---------------------------------------------------------------------------
@@ -185,6 +186,41 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
         });
       }
     });
+  }
+
+  // -------------------------------------------------------------------------
+  // 미니게임: 광고 보고 터치 충전
+  // -------------------------------------------------------------------------
+  Future<void> _showRewardedAd(BuildContext context) async {
+    final adService = AdService.instance;
+
+    if (!adService.isAdReady) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('광고를 준비 중이에요. 잠시 후 다시 시도해주세요!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+      adService.loadRewardedAd();
+      return;
+    }
+
+    await adService.showRewardedAd(
+      onRewarded: () {
+        if (context.mounted) {
+          context.read<PetBloc>().add(const ResetMiniGameSession());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('터치가 충전되었어요! 더 놀아주세요!'),
+              backgroundColor: Color(0xFF4CAF50),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+    );
   }
 
   // -------------------------------------------------------------------------
@@ -448,6 +484,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
     required CareAction action,
     required bool enabled,
     required Color categoryColor,
+    DateTime? lastActionAt,
   }) {
     return InkWell(
       onTap: enabled
@@ -497,14 +534,18 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            if (!enabled)
-              const Text(
-                '쿨다운',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFFBDB5B0),
-                ),
-              ),
+            if (!enabled && lastActionAt != null)
+              Builder(builder: (_) {
+                final remaining = PetConstants.careCooldownMinutes -
+                    DateTime.now().difference(lastActionAt).inMinutes;
+                return Text(
+                  remaining > 0 ? '남은 ${remaining}분' : '곧 가능',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Color(0xFFBDB5B0),
+                  ),
+                );
+              }),
           ],
         ),
       ),
@@ -692,10 +733,10 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                   children: [
                     PetAvatar.fromPet(pet: pet, size: 140),
                     Positioned(
-                      right: -12,
-                      bottom: 0,
+                      right: -8,
+                      top: -4,
                       child: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           shape: BoxShape.circle,
@@ -709,7 +750,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         ),
                         child: Text(
                           pet.moodEmoji,
-                          style: const TextStyle(fontSize: 28),
+                          style: const TextStyle(fontSize: 22),
                         ),
                       ),
                     ),
@@ -854,6 +895,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       emoji: '🍽️',
                       action: CareAction.feed,
                       enabled: state.canFeed,
+                      lastActionAt: pet.lastFedAt,
                       categoryColor: categoryColor,
                     ),
                     _buildCareItem(
@@ -861,6 +903,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       emoji: '💧',
                       action: CareAction.water,
                       enabled: state.canWater,
+                      lastActionAt: pet.lastWateredAt,
                       categoryColor: categoryColor,
                     ),
                     _buildCareItem(
@@ -868,6 +911,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       emoji: '🎮',
                       action: CareAction.play,
                       enabled: state.canPlay,
+                      lastActionAt: pet.lastPlayedAt,
                       categoryColor: categoryColor,
                     ),
                     _buildCareItem(
@@ -875,6 +919,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       emoji: '🚶',
                       action: CareAction.walk,
                       enabled: state.canWalk,
+                      lastActionAt: pet.lastWalkedAt,
                       categoryColor: categoryColor,
                     ),
                     _buildCareItem(
@@ -882,6 +927,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       emoji: '🛁',
                       action: CareAction.bath,
                       enabled: state.canBath,
+                      lastActionAt: pet.lastBathedAt,
                       categoryColor: categoryColor,
                     ),
                     _buildCareItem(
@@ -889,6 +935,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                       emoji: '🎵',
                       action: CareAction.lullaby,
                       enabled: state.canLullaby,
+                      lastActionAt: pet.lastLullabyAt,
                       categoryColor: categoryColor,
                     ),
                   ],
@@ -911,7 +958,7 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                 _buildSectionTitle('💕 쓰다듬기'),
                 Container(
                   width: double.infinity,
-                  height: 200,
+                  height: 220,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -971,17 +1018,60 @@ class _PetDetailScreenState extends State<PetDetailScreen> {
                         ),
                       ),
 
-                      // 하단 안내 텍스트
+                      // 하단 안내 텍스트 + 광고 버튼
                       Positioned(
-                        bottom: 14,
-                        child: Text(
-                          state.miniGameTapsRemaining > 0
-                              ? '남은 터치: ${state.miniGameTapsRemaining}/${PetConstants.miniGameMaxTapsPerSession}'
-                              : '오늘은 충분히 놀았어요! 🥰',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF8D6E63),
-                          ),
+                        bottom: 10,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              state.miniGameTapsRemaining > 0
+                                  ? '남은 터치: ${state.miniGameTapsRemaining}/${PetConstants.miniGameMaxTapsPerSession}'
+                                  : '터치를 다 사용했어요!',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8D6E63),
+                              ),
+                            ),
+                            if (state.miniGameTapsRemaining <= 0)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: GestureDetector(
+                                  onTap: () => _showRewardedAd(context),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFFFF9800), Color(0xFFFF5722)],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFFF9800).withValues(alpha: 0.3),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.play_circle_fill, color: Colors.white, size: 16),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          '광고 보고 더 놀기',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                     ],

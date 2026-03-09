@@ -149,12 +149,8 @@ class PetBloc extends Bloc<PetEvent, PetState> {
       speciesName: event.speciesName,
       speciesCategory: event.speciesCategory,
       nickname: event.nickname,
-      lastFedAt: DateTime.now(),
-      lastWateredAt: DateTime.now(),
-      lastPlayedAt: DateTime.now(),
-      lastWalkedAt: DateTime.now(),
-      lastBathedAt: DateTime.now(),
-      lastLullabyAt: DateTime.now(),
+      // 처음 선택 시 돌봄 즉시 가능하도록 null로 설정
+
     );
     _activities.clear();
     _miniGameTapsRemaining = PetConstants.miniGameMaxTapsPerSession;

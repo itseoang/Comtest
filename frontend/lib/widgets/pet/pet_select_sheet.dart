@@ -17,6 +17,16 @@ class _PetSelectSheetState extends State<PetSelectSheet> {
   final _nicknameController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // 컬렉션이 아직 로드되지 않았으면 로드
+    final collectionState = context.read<CollectionBloc>().state;
+    if (collectionState is! CollectionLoaded) {
+      context.read<CollectionBloc>().add(const LoadCollections());
+    }
+  }
+
+  @override
   void dispose() {
     _nicknameController.dispose();
     super.dispose();

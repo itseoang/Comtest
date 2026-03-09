@@ -156,12 +156,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // 약간의 딜레이 후 퀴즈 트리거 (화면 전환 애니메이션 완료 후)
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (mounted) {
-        context.read<QuizBloc>().add(const CheckQuizTrigger(trigger: 'dashboard'));
-      }
-    });
   }
 
   @override

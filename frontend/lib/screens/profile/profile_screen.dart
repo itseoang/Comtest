@@ -5,8 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/challenge/challenge_bloc.dart';
+import '../../blocs/collection/collection_bloc.dart';
 import '../../blocs/guardian/guardian_bloc.dart';
+import '../../blocs/pet/pet_bloc.dart';
 import '../../blocs/quiz/quiz_bloc.dart';
+import '../home/pet_detail_screen.dart';
+import '../ranch/ranch_screen.dart';
 import '../../config/constants.dart';
 import '../../models/profile.dart';
 import '../../widgets/pet/pet_avatar.dart';
@@ -397,7 +402,36 @@ class _ProfileContentState extends State<_ProfileContent> {
                   leading: const Icon(Icons.pets_outlined, color: Color(0xFF2E7D32)),
                   title: const Text('내 펫'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => context.push('/home/pet'),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => MultiBlocProvider(
+                          providers: [
+                            BlocProvider.value(value: context.read<PetBloc>()),
+                            BlocProvider.value(value: context.read<ChallengeBloc>()),
+                          ],
+                          child: PetDetailScreen(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 56),
+                ListTile(
+                  leading: const Icon(Icons.grass_outlined, color: Color(0xFF2E7D32)),
+                  title: const Text('내 목장 가기'),
+                  subtitle: const Text('수집한 생물들이 뛰어놀아요'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => BlocProvider.value(
+                          value: context.read<CollectionBloc>(),
+                          child: const RanchScreen(),
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 const Divider(height: 1, indent: 56),
                 ListTile(
@@ -492,6 +526,20 @@ class _ProfileContentState extends State<_ProfileContent> {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // ----------------------------------------------------------------
+          // 크레딧
+          // ----------------------------------------------------------------
+          const Text(
+            '해원초 : 이서아 만드는 중',
+            style: TextStyle(
+              fontSize: 13,
+              color: Color(0xFF8D6E63),
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
 
