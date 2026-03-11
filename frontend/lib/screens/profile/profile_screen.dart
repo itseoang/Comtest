@@ -14,9 +14,11 @@ import '../home/pet_detail_screen.dart';
 import '../ranch/ranch_screen.dart';
 import '../../config/constants.dart';
 import '../../models/profile.dart';
+import '../../blocs/achievement/achievement_bloc.dart';
+import '../../data/badge_definitions.dart';
+import '../../widgets/common/badge_chip.dart';
 import '../../widgets/pet/pet_avatar.dart';
 import '../guardian/guardian_invite_screen.dart';
-import '../guardian/guardian_scan_screen.dart';
 
 // ---------------------------------------------------------------------------
 // 헬퍼: 아바타 프레임 색상
@@ -189,6 +191,7 @@ class _ProfileContentState extends State<_ProfileContent> {
           currentFrameIndex: widget.profile.avatarFrameIndex,
           currentBgColorIndex: widget.profile.profileBgColorIndex,
           currentTitleBadge: widget.profile.titleBadge,
+          earnedBadgeIds: widget.profile.earnedBadgeIds,
         ),
       ),
     );
@@ -375,6 +378,73 @@ class _ProfileContentState extends State<_ProfileContent> {
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+
+          // ----------------------------------------------------------------
+          // 내 뱃지 섹션
+          // ----------------------------------------------------------------
+          BlocBuilder<AchievementBloc, AchievementState>(
+            builder: (context, achievementState) {
+              final earnedIds = achievementState is AchievementLoaded
+                  ? achievementState.earnedBadgeIds
+                  : <String>[];
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.emoji_events, color: Color(0xFFFF8F00), size: 22),
+                          const SizedBox(width: 8),
+                          const Text(
+                            '내 뱃지',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF3E2723),
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${earnedIds.length}/${kAllBadges.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF2E7D32),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 88,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: kAllBadges.length,
+                          itemBuilder: (context, index) {
+                            final badge = kAllBadges[index];
+                            return BadgeChip(
+                              badge: badge,
+                              isEarned: earnedIds.contains(badge.id),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
 
@@ -801,17 +871,16 @@ const _kBgColorOptions = <(String, Color)>[
   ('로즈', Color(0xFFF3E5F5)),
 ];
 
-// 칭호 옵션 데이터 (null = 없음)
-const _kTitleOptions = <String?>[
-  null,
-  '🌱 새싹 탐험가',
-  '🔍 호기심 천국',
-  '📸 자연 포토그래퍼',
-  '📝 일기 마스터',
-  '🏆 도감 챔피언',
-  '🌿 자연의 친구',
-  '🦋 생태 관찰자',
-];
+// 칭호 옵션: 획득한 뱃지의 titleLabel을 동적으로 생성
+List<String?> _buildTitleOptions(List<String> earnedBadgeIds) {
+  final titles = <String?>[null]; // null = '없음'
+  for (final badge in kAllBadges) {
+    if (earnedBadgeIds.contains(badge.id)) {
+      titles.add(badge.titleLabel);
+    }
+  }
+  return titles;
+}
 
 class _CustomizeProfileSheet extends StatefulWidget {
   const _CustomizeProfileSheet({
@@ -819,12 +888,14 @@ class _CustomizeProfileSheet extends StatefulWidget {
     required this.currentFrameIndex,
     required this.currentBgColorIndex,
     required this.currentTitleBadge,
+    required this.earnedBadgeIds,
   });
 
   final String? currentStatusMessage;
   final int currentFrameIndex;
   final int currentBgColorIndex;
   final String? currentTitleBadge;
+  final List<String> earnedBadgeIds;
 
   @override
   State<_CustomizeProfileSheet> createState() => _CustomizeProfileSheetState();
@@ -1144,46 +1215,76 @@ class _CustomizeProfileSheetState extends State<_CustomizeProfileSheet> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _kTitleOptions.map((title) {
-                        final isSelected = _selectedTitle == title;
-                        final label = title ?? '없음';
+                    Builder(
+                      builder: (context) {
+                        final titleOptions = _buildTitleOptions(widget.earnedBadgeIds);
+                        // 모든 뱃지 표시 (획득한 것 + 미획득 잠금)
+                        final allTitles = <String?>[null];
+                        for (final badge in kAllBadges) {
+                          allTitles.add(badge.titleLabel);
+                        }
 
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedTitle = title),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? const Color(0xFF2E7D32)
-                                  : const Color(0xFFF5F5F0),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF2E7D32)
-                                    : const Color(0xFFD7CCC8),
+                        return Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: allTitles.map((title) {
+                            final isSelected = _selectedTitle == title;
+                            final isEarned = titleOptions.contains(title);
+                            final label = title ?? '없음';
+
+                            return GestureDetector(
+                              onTap: isEarned
+                                  ? () => setState(() => _selectedTitle = title)
+                                  : null,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFF2E7D32)
+                                      : isEarned
+                                          ? const Color(0xFFF5F5F0)
+                                          : const Color(0xFFEEEEEE),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(0xFF2E7D32)
+                                        : isEarned
+                                            ? const Color(0xFFD7CCC8)
+                                            : const Color(0xFFE0E0E0),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (!isEarned && title != null)
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 4),
+                                        child: Icon(Icons.lock, size: 14, color: Color(0xFFBDBDBD)),
+                                      ),
+                                    Text(
+                                      label,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : isEarned
+                                                ? const Color(0xFF3E2723)
+                                                : const Color(0xFFBDBDBD),
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              label,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: isSelected
-                                    ? Colors.white
-                                    : const Color(0xFF3E2723),
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
                     ),
                     const SizedBox(height: 32),
 
@@ -1251,8 +1352,6 @@ class _GuardianSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isGuardian = profile.isGuardian;
-
     return Padding(
       padding: EdgeInsets.fromLTRB(24, 16, 24, 32 + MediaQuery.of(context).viewInsets.bottom),
       child: Column(
@@ -1270,17 +1369,15 @@ class _GuardianSheet extends StatelessWidget {
           const SizedBox(height: 20),
           const Icon(Icons.family_restroom, size: 48, color: Color(0xFF2E7D32)),
           const SizedBox(height: 12),
-          Text(
-            isGuardian ? '어린이 관리' : '보호자 연결',
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3E2723)),
+          const Text(
+            '보호자 연결',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF3E2723)),
           ),
           const SizedBox(height: 8),
-          Text(
-            isGuardian
-                ? '어린이의 QR 코드를 스캔하거나\n초대 코드를 입력해 연결하세요'
-                : '보호자를 연결하면 활동 내역을 공유하고\n안전하게 앱을 사용할 수 있어요',
+          const Text(
+            '보호자를 연결하면 활동 내역을 공유하고\n안전하게 앱을 사용할 수 있어요',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: Color(0xFF8D6E63), height: 1.5),
+            style: TextStyle(fontSize: 14, color: Color(0xFF8D6E63), height: 1.5),
           ),
           const SizedBox(height: 24),
 
@@ -1288,76 +1385,36 @@ class _GuardianSheet extends StatelessWidget {
           BlocBuilder<GuardianBloc, GuardianState>(
             builder: (context, state) {
               if (state is GuardianConnected) {
-                return _buildConnectedInfo(context, state, isGuardian);
+                return _buildConnectedInfo(context, state);
               }
               return const SizedBox.shrink();
             },
           ),
 
-          if (isGuardian) ...[
-            // 보호자 모드 — QR 코드 스캔 버튼
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _openScanScreen(context);
-                },
-                icon: const Icon(Icons.qr_code_scanner),
-                label: const Text('QR 코드 스캔', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
+          // 보호자 초대하기 버튼 (QR 생성)
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _openInviteScreen(context, profile);
+              },
+              icon: const Icon(Icons.qr_code),
+              label: const Text('보호자 초대하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2E7D32),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            const SizedBox(height: 12),
-            // 초대 코드 입력 버튼
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _showCodeInputDialog(context);
-                },
-                icon: const Icon(Icons.keyboard),
-                label: const Text('초대 코드 입력', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF2E7D32),
-                  side: const BorderSide(color: Color(0xFF2E7D32)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-          ] else ...[
-            // 어린이 모드 — 보호자 초대하기 버튼 (QR 생성)
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _openInviteScreen(context, profile);
-                },
-                icon: const Icon(Icons.qr_code),
-                label: const Text('보호자 초대하기', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildConnectedInfo(BuildContext context, GuardianConnected state, bool isGuardian) {
+  Widget _buildConnectedInfo(BuildContext context, GuardianConnected state) {
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 16),
@@ -1373,9 +1430,9 @@ class _GuardianSheet extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle, size: 20, color: Color(0xFF4CAF50)),
               const SizedBox(width: 8),
-              Text(
-                isGuardian ? '연결된 어린이' : '연결된 보호자',
-                style: const TextStyle(
+              const Text(
+                '연결된 보호자',
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF2E7D32),
@@ -1384,30 +1441,16 @@ class _GuardianSheet extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          if (isGuardian && state.connectedChildren.isNotEmpty)
-            ...state.connectedChildren.map(
-              (child) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    const Icon(Icons.child_care, size: 18, color: Color(0xFF8D6E63)),
-                    const SizedBox(width: 8),
-                    Text(child, style: const TextStyle(fontSize: 15, color: Color(0xFF3E2723))),
-                  ],
-                ),
+          Row(
+            children: [
+              const Icon(Icons.person, size: 18, color: Color(0xFF8D6E63)),
+              const SizedBox(width: 8),
+              Text(
+                state.guardianName,
+                style: const TextStyle(fontSize: 15, color: Color(0xFF3E2723)),
               ),
-            )
-          else if (!isGuardian)
-            Row(
-              children: [
-                const Icon(Icons.person, size: 18, color: Color(0xFF8D6E63)),
-                const SizedBox(width: 8),
-                Text(
-                  state.guardianName,
-                  style: const TextStyle(fontSize: 15, color: Color(0xFF3E2723)),
-                ),
-              ],
-            ),
+            ],
+          ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -1439,121 +1482,6 @@ class _GuardianSheet extends StatelessWidget {
     );
   }
 
-  void _openScanScreen(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        fullscreenDialog: true,
-        builder: (_) => BlocProvider(
-          create: (_) => GuardianBloc(),
-          child: const GuardianScanScreen(),
-        ),
-      ),
-    );
-  }
-
-  void _showCodeInputDialog(BuildContext context) {
-    final codeController = TextEditingController();
-    final guardianBloc = GuardianBloc();
-
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => BlocProvider.value(
-        value: guardianBloc,
-        child: BlocListener<GuardianBloc, GuardianState>(
-          listener: (ctx, state) {
-            if (state is GuardianRegistered) {
-              Navigator.of(dialogContext).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("'${state.childName}' 어린이와 연결되었습니다!"),
-                  backgroundColor: const Color(0xFF4CAF50),
-                ),
-              );
-              guardianBloc.close();
-            } else if (state is GuardianError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: const Color(0xFFE53935),
-                ),
-              );
-            }
-          },
-          child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Text(
-              '초대 코드 입력',
-              style: TextStyle(color: Color(0xFF3E2723)),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '어린이의 초대 코드 8자리를 입력해주세요',
-                  style: TextStyle(fontSize: 14, color: Color(0xFF8D6E63)),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: codeController,
-                  textCapitalization: TextCapitalization.characters,
-                  maxLength: 8,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 4,
-                    color: Color(0xFF3E2723),
-                  ),
-                  decoration: InputDecoration(
-                    hintText: 'ABCD1234',
-                    hintStyle: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 4,
-                      color: const Color(0xFF8D6E63).withValues(alpha: 0.3),
-                    ),
-                    counterText: '',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFFD7CCC8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF2E7D32), width: 2),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(dialogContext).pop();
-                  guardianBloc.close();
-                },
-                child: const Text('취소', style: TextStyle(color: Color(0xFF8D6E63))),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final code = codeController.text.toUpperCase().trim();
-                  if (code.length == 8) {
-                    guardianBloc.add(RegisterAsGuardian(inviteCode: code));
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text('확인'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // ===========================================================================

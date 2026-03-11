@@ -22,6 +22,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<UpdateGradeLevel>(_onUpdateGradeLevel);
     on<UpdateNickname>(_onUpdateNickname);
     on<UpdateProfileCustomization>(_onUpdateProfileCustomization);
+    on<RecordLogin>(_onRecordLogin);
+    on<UpdateEarnedBadges>(_onUpdateEarnedBadges);
   }
 
   final DioClient _dioClient;
@@ -39,6 +41,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     isGuardian: false,
     gradeLevel: 2,
     ecoPoints: 500,
+    loginCount: 0,
+    loginStreak: 0,
   );
 
   /// devMode 전용 보호자 mock 프로필
@@ -185,6 +189,51 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           profileBgColorIndex: event.profileBgColorIndex ?? current.profileBgColorIndex,
           titleBadge: event.titleBadge ?? current.titleBadge,
         ),
+      ));
+    }
+  }
+
+  /// 로그인 기록: 오늘 첫 접속이면 loginCount+1, 어제 접속 streak+1 아니면 1
+  Future<void> _onRecordLogin(
+    RecordLogin event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is Authenticated) {
+      final current = (state as Authenticated).profile;
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+
+      // 이미 오늘 기록했으면 스킵
+      if (current.lastLoginDate == today) return;
+
+      int newStreak = 1;
+      if (current.lastLoginDate != null) {
+        final lastDate = DateTime.parse(current.lastLoginDate!);
+        final todayDate = DateTime.parse(today);
+        final diff = todayDate.difference(lastDate).inDays;
+        if (diff == 1) {
+          newStreak = current.loginStreak + 1;
+        }
+      }
+
+      emit(Authenticated(
+        profile: current.copyWith(
+          loginCount: current.loginCount + 1,
+          loginStreak: newStreak,
+          lastLoginDate: today,
+        ),
+      ));
+    }
+  }
+
+  /// 획득한 뱃지 ID 목록 갱신
+  Future<void> _onUpdateEarnedBadges(
+    UpdateEarnedBadges event,
+    Emitter<AuthState> emit,
+  ) async {
+    if (state is Authenticated) {
+      final current = (state as Authenticated).profile;
+      emit(Authenticated(
+        profile: current.copyWith(earnedBadgeIds: event.badgeIds),
       ));
     }
   }

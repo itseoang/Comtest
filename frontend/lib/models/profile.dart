@@ -19,6 +19,11 @@ class Profile extends Equatable {
     this.avatarFrameIndex = 0,
     this.profileBgColorIndex = 0,
     this.titleBadge,
+    this.role = 'user',
+    this.loginCount = 0,
+    this.loginStreak = 0,
+    this.lastLoginDate,
+    this.earnedBadgeIds = const [],
   });
 
   final String id;
@@ -44,6 +49,18 @@ class Profile extends Equatable {
   final int profileBgColorIndex;
   /// 칭호 배지 (null=없음)
   final String? titleBadge;
+  /// 역할 ('user', 'guardian', 'admin')
+  final String role;
+  /// 누적 로그인 횟수
+  final int loginCount;
+  /// 연속 로그인 일수
+  final int loginStreak;
+  /// 마지막 로그인 날짜 (ISO 8601)
+  final String? lastLoginDate;
+  /// 획득한 배지 ID 목록
+  final List<String> earnedBadgeIds;
+
+  bool get isAdmin => role == 'admin';
 
   Profile copyWith({
     String? id,
@@ -63,6 +80,11 @@ class Profile extends Equatable {
     int? avatarFrameIndex,
     int? profileBgColorIndex,
     String? titleBadge,
+    String? role,
+    int? loginCount,
+    int? loginStreak,
+    String? lastLoginDate,
+    List<String>? earnedBadgeIds,
   }) {
     return Profile(
       id: id ?? this.id,
@@ -82,6 +104,11 @@ class Profile extends Equatable {
       avatarFrameIndex: avatarFrameIndex ?? this.avatarFrameIndex,
       profileBgColorIndex: profileBgColorIndex ?? this.profileBgColorIndex,
       titleBadge: titleBadge ?? this.titleBadge,
+      role: role ?? this.role,
+      loginCount: loginCount ?? this.loginCount,
+      loginStreak: loginStreak ?? this.loginStreak,
+      lastLoginDate: lastLoginDate ?? this.lastLoginDate,
+      earnedBadgeIds: earnedBadgeIds ?? this.earnedBadgeIds,
     );
   }
 
@@ -104,6 +131,13 @@ class Profile extends Equatable {
       avatarFrameIndex: json['avatar_frame_index'] as int? ?? 0,
       profileBgColorIndex: json['profile_bg_color_index'] as int? ?? 0,
       titleBadge: json['title_badge'] as String?,
+      role: json['role'] as String? ?? 'user',
+      loginCount: json['login_count'] as int? ?? 0,
+      loginStreak: json['login_streak'] as int? ?? 0,
+      lastLoginDate: json['last_login_date'] as String?,
+      earnedBadgeIds: (json['earned_badge_ids'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ?? const [],
     );
   }
 
@@ -126,6 +160,11 @@ class Profile extends Equatable {
       'avatar_frame_index': avatarFrameIndex,
       'profile_bg_color_index': profileBgColorIndex,
       'title_badge': titleBadge,
+      'role': role,
+      'login_count': loginCount,
+      'login_streak': loginStreak,
+      'last_login_date': lastLoginDate,
+      'earned_badge_ids': earnedBadgeIds,
     };
   }
 
@@ -148,5 +187,10 @@ class Profile extends Equatable {
         avatarFrameIndex,
         profileBgColorIndex,
         titleBadge,
+        role,
+        loginCount,
+        loginStreak,
+        lastLoginDate,
+        earnedBadgeIds,
       ];
 }

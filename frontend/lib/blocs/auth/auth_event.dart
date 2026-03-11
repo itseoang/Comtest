@@ -93,3 +93,16 @@ class UpdateProfileCustomization extends AuthEvent {
   List<Object?> get props => [statusMessage, avatarFrameIndex, profileBgColorIndex, titleBadge];
 }
 
+/// 로그인 기록 (loginCount, loginStreak 갱신)
+class RecordLogin extends AuthEvent {
+  const RecordLogin();
+}
+
+/// 획득한 뱃지 ID 목록 갱신
+class UpdateEarnedBadges extends AuthEvent {
+  const UpdateEarnedBadges({required this.badgeIds});
+  final List<String> badgeIds;
+  @override
+  List<Object?> get props => [badgeIds];
+}
+
